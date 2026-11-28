@@ -63,7 +63,9 @@ class RedeSocial:
             self.arvore.inserir(post[2], post)
 
     def achar_id(self, usuario):
-        """Devolve o id do @usuario pela tabela hash, ou None."""
+        """Devolve o id do @usuario pela tabela hash, ou None. Aceita sem o @ tambem."""
+        if not usuario.startswith("@"):
+            usuario = "@" + usuario
         return self.tabela.buscar(usuario)
 
     def arroba(self, id_usuario):
