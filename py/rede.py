@@ -125,3 +125,66 @@ class RedeSocial:
                 comunidades.append(t)
         comunidades = merge_sort(comunidades, lambda a, b: a > b)
         return [comunidades, isolados]
+
+    # ---------- 3.4 POSTS_ENTRE ----------
+    def posts_entre(self, data1, data2):
+        """Posts entre data1 e data2 (incluidas) em ordem cronologica, pela AVL."""
+        return self.arvore.buscar_intervalo(data1, data2)
+
+    # ---------- 3.5 TOP_SEGUIDOS / TOP_CURTIDOS ----------
+    def top_seguidos(self, k):
+        """Os k usuarios com mais seguidores: lista de [@usuario, nome, seguidores]."""
+        def vem_antes(a, b):
+            if a[1] != b[1]:
+                return a[1] > b[1]
+            return self.arroba(a[0]) < self.arroba(b[0])
+
+        heap = Heap(vem_antes)
+        for id_usuario in range(1, self.maior_id + 1):
+            if self.usuarios[id_usuario] is not None:
+                heap.inserir([id_usuario, self.grafo.qtd_seguidores(id_usuario)])
+
+        resultado = []
+        while len(resultado) < k and not heap.vazia():
+            item = heap.remover_topo()
+            resultado.append([self.arroba(item[0]), self.usuarios[item[0]][2], item[1]])
+        return resultado
+
+    def top_curtidos(self, k):
+        """Os k posts com mais curtidas: lista de [id, @autor, data, curtidas, texto]."""
+        def vem_antes(a, b):
+            if a[3] != b[3]:
+                return a[3] > b[3]
+            return a[0] < b[0]  # empate: post mais antigo (menor id) primeiro
+
+        heap = Heap(vem_antes)
+        for p in self.posts:
+            heap.inserir(p)
+
+        resultado = []
+        while len(resultado) < k and not heap.vazia():
+            p = heap.remover_topo()
+            resultado.append([p[0], self.arroba(p[1]), p[2], p[3], p[4]])
+        return resultado
+
+    # ---------- 3.6 RANKING ----------
+    def ranking(self):
+        """Ranking de todos por engajamento = seguidores * 2 + soma das curtidas.
+
+        Lista de [@usuario, engajamento, seguidores, curtidas], do maior pro menor,
+        e no empate em ordem alfabetica. Usa o merge sort.
+        """
+        lista = []
+        for id_usuario in range(1, self.maior_id + 1):
+            if self.usuarios[id_usuario] is None:
+                continue
+            seg = self.grafo.qtd_seguidores(id_usuario)
+            curt = self.soma_curtidas[id_usuario]
+            lista.append([self.arroba(id_usuario), seg * 2 + curt, seg, curt])
+
+        def vem_antes(a, b):
+            if a[1] != b[1]:
+                return a[1] > b[1]
+            return a[0] < b[0]
+
+        return merge_sort(lista, vem_antes)
